@@ -1,6 +1,8 @@
 # monthly-flow-indicators-map
 
-Monthly streamflow indicators computation considering natural versus modified conditions but considering a map (GeoTiff or PCRaster), istead of a single CSV files. 
+At this repsitory you may find a step-by-step about how to proceed with the calculations of monthly streamflow indicators computation considering natural versus modified conditions but considering a Raster (PCRaster), istead of single CSV files. 
+
+The input are PCRasters of a study area considering each .map file as a different time-step. In this case the time-step used is monthly. 
 
 References: Pumo, D., Francipane, A., Cannarozzo, M., Antinoro, C., Noto, L.V., 2018. Monthly hydrological indicators to assess possible alterations on rivers' flow regime. Water Resour. Manag. 32, 3687–3706. https://doi.org/10.1007/s11269-018-2013-6.
 
