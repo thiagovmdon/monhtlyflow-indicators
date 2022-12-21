@@ -1,6 +1,6 @@
 # monthly-flow-indicators-map
 
-At this repsitory you may find a step-by-step about how to proceed with the calculations of monthly streamflow indicators computation considering natural versus modified conditions but considering a Raster (PCRaster), istead of single CSV files. 
+At this repsitory you may find a step-by-step about how to proceed with the calculations of monthly streamflow indicators computation considering natural versus modified conditions, considering both one CSV file, or but considering a Raster (PCRaster). 
 
 The input are PCRasters of a study area considering each .map file as a different time-step. In this case the time-step used is monthly. 
 
