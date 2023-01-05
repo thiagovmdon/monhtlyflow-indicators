@@ -1,4 +1,4 @@
-# monthly-flow-indicators-map
+# monthlyflow-indicators
 
 At this repsitory you may find a step-by-step about how to proceed with the calculations of monthly streamflow indicators computation considering natural versus modified conditions, considering both a tabular file, or but considering a Raster (PCRaster). 
 
