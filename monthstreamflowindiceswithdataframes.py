@@ -79,25 +79,20 @@ def p1s_magnitudetiming(datanatural: pd.pandas.core.frame.DataFrame,
     numstationsused = datanatural.shape[1]-1
     
     # A table to be filled with the p1s is created and filled with NaNs:
-    p1s = np.empty([12, ])
-    
+    p1s = pd.DataFrame(index = range(1,13), data=np.zeros((12, numstationsused)))
+    p1s.iloc[:,:] = np.nan
     
     start = time.time()    
     # A loop is made to compute each indicator. Some metrics are computed inside 
     # the loop to prevent a memory usage error and to save time.
     for j in tqdm(range(numstationsused)):
-        
-        p1saux = np.empty([12, ])
         for k in range(12):    
             MedianMonthlyStreamflow = datamodified.iloc[:,[j,-1]].groupby('month').median()
             Quantile25MonthlyStreamflow = datanatural.iloc[:,[j,-1]].groupby('month').quantile(q=0.25)
             Quantile75MonthlyStreamflow = datanatural.iloc[:,[j,-1]].groupby('month').quantile(q=0.75)
         
-            p1saux[k,] = pik(Quantile25MonthlyStreamflow.iloc[k,0], Quantile75MonthlyStreamflow.iloc[k,0], MedianMonthlyStreamflow.iloc[k,0])
+            p1s.iloc[k,j] = pik(Quantile25MonthlyStreamflow.iloc[k,0], Quantile75MonthlyStreamflow.iloc[k,0], MedianMonthlyStreamflow.iloc[k,0])
         
-        p1s = np.vstack((p1s, p1saux))
-    
-    p1s = np.delete(p1s, [0], axis = 0).T        
     # Now the first group indice (MI-HRA) is computed:
     MIhra1 = p1s.mean()
     
@@ -133,9 +128,8 @@ def p2s_magnitudeduration(datanatural: pd.pandas.core.frame.DataFrame,
     numstationsused = datanatural.shape[1]-1    
     
     # This is an empty table to be filled with the indicators for group 2:
-    p2s = np.empty([4, ])
-    
-    
+    p2s = pd.DataFrame(index = range(4), columns = range(0,numstationsused), data=np.nan)
+
     # A loop is made to compute each indicator. Some metrics are computed inside 
     # the loop to prevent a memory usage error and to save time.
     for j in tqdm(range(numstationsused)):
@@ -215,15 +209,10 @@ def p2s_magnitudeduration(datanatural: pd.pandas.core.frame.DataFrame,
         Quantile75AnnualMinMax2.iloc[1,:] = AnnualMax3MonthsFlownat.quantile(q=0.75)
         Quantile75AnnualMinMax2.iloc[2,:] = AnnualMin6MonthsFlownat.quantile(q=0.75)
         Quantile75AnnualMinMax2.iloc[3,:] = AnnualMax6MonthsFlownat.quantile(q=0.75)
-        
-        p2saux = np.empty([4, ])
-        for k in range(4):
-            
-            p2saux[k,] = pik(Quantile25AnnualMinMax2.iloc[k,0], Quantile75AnnualMinMax2.iloc[k,0], MedianAnnualMinMax2.iloc[k,0])
-            
-        p2s = np.vstack((p2s, p2saux))
     
-    p2s = np.delete(p2s, [0], axis = 0).T        
+        for k in range(4):
+            p2s.iloc[k,j] = pik(Quantile25AnnualMinMax2.iloc[k,0], Quantile75AnnualMinMax2.iloc[k,0], MedianAnnualMinMax2.iloc[k,0])
+
     # Now the second group indice (MI-HRA) is computed:
     MIhra2 = p2s.mean()
     
