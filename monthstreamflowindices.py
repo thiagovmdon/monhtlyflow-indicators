@@ -78,16 +78,16 @@ def p1s_magnitudetiming(datanatural: pd.pandas.core.frame.DataFrame,
     # The number of stations (grids) is computed:
     numstationsused = datanatural.shape[1]-1
     
-    # A table to be filled with the p1s is created and filled with NaNs:
+    # We first create an array to be fille filled with the indices, and another just as auxiliar.
     p1s = np.empty([12, ])
+    p1saux = np.empty([12, ])
     
+    start = time.time()
     
-    start = time.time()    
     # A loop is made to compute each indicator. Some metrics are computed inside 
     # the loop to prevent a memory usage error and to save time.
     for j in tqdm(range(numstationsused)):
         
-        p1saux = np.empty([12, ])
         for k in range(12):    
             MedianMonthlyStreamflow = datamodified.iloc[:,[j,-1]].groupby('month').median()
             Quantile25MonthlyStreamflow = datanatural.iloc[:,[j,-1]].groupby('month').quantile(q=0.25)
@@ -97,13 +97,16 @@ def p1s_magnitudetiming(datanatural: pd.pandas.core.frame.DataFrame,
         
         p1s = np.vstack((p1s, p1saux))
     
-    p1s = np.delete(p1s, [0], axis = 0).T        
-    # Now the first group indice (MI-HRA) is computed:
-    MIhra1 = p1s.mean()
+    p1s = np.delete(p1s, [0], axis = 0).T   
+     
+    # Now the first group indice (MI-HRA) is computed. We use the "axis=0" because we are dealing with a numpy:
+    MIhra1 = p1s.mean(axis = 0)
     
+    #This part is used just to print the total processing time in seconds:
     end = time.time()
     print(end - start)
-    return p1s, MIhra1
+    
+    return pd.DataFrame(data = p1s), pd.DataFrame(columns = ["MIhra1"], data = MIhra1)
         
         
         
@@ -132,12 +135,13 @@ def p2s_magnitudeduration(datanatural: pd.pandas.core.frame.DataFrame,
     # The number of stations (grids) is computed:
     numstationsused = datanatural.shape[1]-1    
     
-    # This is an empty table to be filled with the indicators for group 2:
+    # We first create an array to be fille filled with the indices, and another just as auxiliar.
     p2s = np.empty([4, ])
-    
+    p2saux = np.empty([4, ])
     
     # A loop is made to compute each indicator. Some metrics are computed inside 
     # the loop to prevent a memory usage error and to save time.
+    start = time.time()
     for j in tqdm(range(numstationsused)):
     
         Months3flownat = pd.DataFrame(data = datanatural.iloc[:,j].resample('3M',closed='left').sum())
@@ -216,7 +220,7 @@ def p2s_magnitudeduration(datanatural: pd.pandas.core.frame.DataFrame,
         Quantile75AnnualMinMax2.iloc[2,:] = AnnualMin6MonthsFlownat.quantile(q=0.75)
         Quantile75AnnualMinMax2.iloc[3,:] = AnnualMax6MonthsFlownat.quantile(q=0.75)
         
-        p2saux = np.empty([4, ])
+        
         for k in range(4):
             
             p2saux[k,] = pik(Quantile25AnnualMinMax2.iloc[k,0], Quantile75AnnualMinMax2.iloc[k,0], MedianAnnualMinMax2.iloc[k,0])
@@ -224,10 +228,14 @@ def p2s_magnitudeduration(datanatural: pd.pandas.core.frame.DataFrame,
         p2s = np.vstack((p2s, p2saux))
     
     p2s = np.delete(p2s, [0], axis = 0).T        
-    # Now the second group indice (MI-HRA) is computed:
-    MIhra2 = p2s.mean()
+    # Now the second group indice (MI-HRA) is computed. We use the "axis=0" because we are dealing with a numpy:
+    MIhra2 = p2s.mean(axis = 0)
     
-    return p2s, MIhra2
+    #This part is used just to print the total processing time in seconds:
+    end = time.time()
+    print(end - start)
+    
+    return pd.DataFrame(data = p2s), pd.DataFrame(columns = ["MIhra2"], data = MIhra2)
     
 
 #%%
@@ -255,8 +263,9 @@ def p3s_timing(datanatural: pd.pandas.core.frame.DataFrame,
     # The number of stations (grids) is computed:
     numstationsused = datanatural.shape[1]-1
     
-    # This is an empty table to be filled with the indicators for group 3:
-    p3s = pd.DataFrame(index = range(2), columns = range(0,numstationsused), data=np.nan)
+    # We first create an array to be fille filled with the indices, and another just as auxiliar.
+    p3s = np.empty([2, ])
+    p3saux = np.empty([2, ])
     
     # Computation of the water years for natural condition:
     datanaturalaux = pd.DataFrame(index = datanatural.index)
@@ -268,7 +277,7 @@ def p3s_timing(datanatural: pd.pandas.core.frame.DataFrame,
     datamodifiedaux["datetime"] = datamodified.index
     datamodifiedaux['water_year'] = datamodifiedaux.datetime.dt.year.where(datamodifiedaux.datetime.dt.month < 10, datamodifiedaux.datetime.dt.year + 1)
     
-
+    start = time.time()
     # A loop is made to compute each indicator. Some metrics are computed inside 
     # the loop to prevent a memory usage error and to save time.
     for j in tqdm(range(numstationsused)):
@@ -326,17 +335,25 @@ def p3s_timing(datanatural: pd.pandas.core.frame.DataFrame,
     
     
         for k in range(2):
-            p3s.iloc[k,j] = pik(Quantile25Months.iloc[k,0], Quantile75Months.iloc[k,0], MedianMonths.iloc[k,0])  
+            p3saux[k,] = pik(Quantile25Months.iloc[k,0], Quantile75Months.iloc[k,0], MedianMonths.iloc[k,0])  
+        
+        p3s = np.vstack((p3s, p3saux))
+        
+    p3s = np.delete(p3s, [0], axis = 0).T        
     
-    # Now the second group indice (MI-HRA) is computed:
-    MIhra3 = p3s.mean()
+    # Now the third group indice (MI-HRA) is computed. We use the "axis=0" because we are dealing with a numpy:
+    MIhra3 = p3s.mean(axis = 0)
     
-    return p3s, MIhra3
+    #This part is used just to print the total processing time in seconds:
+    end = time.time()
+    print(end - start)
+    
+    return pd.DataFrame(p3s), pd.DataFrame(columns = ["MIhra3"], data = MIhra3)
 
 
 #%%
 #### Magnitude frequency (Group 4):
-def p4s_timing(datanatural: pd.pandas.core.frame.DataFrame, 
+def p4s_magnitudefreq(datanatural: pd.pandas.core.frame.DataFrame, 
                         datamodified: pd.pandas.core.frame.DataFrame):     
     """
     Inputs
@@ -359,8 +376,9 @@ def p4s_timing(datanatural: pd.pandas.core.frame.DataFrame,
     # The number of stations (grids) is computed:
     numstationsused = datanatural.shape[1]-1
     
-    # This is an empty table to be filled with the indicators for group 4:
-    p4s = pd.DataFrame(index = range(2), columns = range(0,numstationsused), data=np.nan)
+    # We first create an array to be fille filled with the indices, and another just as auxiliar.
+    p4s = np.empty([2, ])
+    p4saux = np.empty([2, ])
     
     # Creating empty tables for data filling:
     condlowpulsesnat = pd.DataFrame(index = datanatural.index, columns = range(1), data=np.nan)
@@ -385,7 +403,7 @@ def p4s_timing(datanatural: pd.pandas.core.frame.DataFrame,
 
     # Loop for computing for each station:
     
-    
+    start = time.time()
     for numstations in tqdm(range(numstationsused)):
     
         
@@ -421,13 +439,23 @@ def p4s_timing(datanatural: pd.pandas.core.frame.DataFrame,
     
         Quantile75LowAndHighPulses.iloc[0,:] = lowpulsesnat.quantile(q=0.75)
         Quantile75LowAndHighPulses.iloc[1,:] = highpulsesnat.quantile(q=0.75)
-        for k in range(2):
-            p4s.iloc[k,numstations] = pik(Quantile25LowAndHighPulses.iloc[k,0], Quantile75LowAndHighPulses.iloc[k,0], MedianLowAndHighPulses.iloc[k,0])
         
-    # Now the second group indice (MI-HRA) is computed:
-    MIhra4 = p4s.mean()
+        for k in range(2):
+            p4saux[k,] = pik(Quantile25LowAndHighPulses.iloc[k,0], Quantile75LowAndHighPulses.iloc[k,0], MedianLowAndHighPulses.iloc[k,0])
+        
+        p4s = np.vstack((p4s, p4saux))
+        
+    p4s = np.delete(p4s, [0], axis = 0).T        
     
-    return p4s, MIhra4        
+    # Now the fourth group indice (MI-HRA) is computed. We use the "axis=0" because we are dealing with a numpy:
+    MIhra4 = p4s.mean(axis = 0)
+    
+    #This part is used just to print the total processing time in seconds:
+    end = time.time()
+    print(end - start)
+    
+    return pd.DataFrame(p4s), pd.DataFrame(columns = ["MIhra4"], data = MIhra4)
+    
 
 
 #%%
@@ -455,13 +483,14 @@ def p5s_freqrateofchange(datanatural: pd.pandas.core.frame.DataFrame,
     # The number of stations (grids) is computed:
     numstationsused = datanatural.shape[1]-1
 
-    # This is an empty table to be filled with the indicators for group 5:
-    p5s = pd.DataFrame(index = range(2), columns = range(0,numstationsused), data=np.nan)
+    # We first create an array to be fille filled with the indices, and another just as auxiliar.
+    p5s = np.empty([2, ])
+    p5saux = np.empty([2, ])
     
     
     
     # Loop for computing for each station:
-    
+    start = time.time()
     for numstations in tqdm(range(numstationsused)):
         # Cumulative differences: 
         diffnatural = datanatural.iloc[:,numstations].diff(1)
@@ -491,9 +520,84 @@ def p5s_freqrateofchange(datanatural: pd.pandas.core.frame.DataFrame,
         Quantile75Differences.iloc[1,:] = diffnaturalnegatives.quantile(q=0.75)
         
         for k in range(2):
-            p5s.iloc[k,numstations] = pik(Quantile25Differences.iloc[k,0], Quantile75Differences.iloc[k,0], MedianDifferences.iloc[k,0])
+            p5saux[k,] = pik(Quantile25Differences.iloc[k,0], Quantile75Differences.iloc[k,0], MedianDifferences.iloc[k,0])
     
-    # Now the second group indice (MI-HRA) is computed:
-    MIhra5 = p5s.mean()
+        p5s = np.vstack((p5s, p5saux))
+        
+    p5s = np.delete(p5s, [0], axis = 0).T        
     
-    return p5s, MIhra5   
+    # Now the fourth group indice (MI-HRA) is computed. We use the "axis=0" because we are dealing with a numpy:
+    MIhra5 = p5s.mean(axis = 0)
+    
+    #This part is used just to print the total processing time in seconds:
+    end = time.time()
+    print(end - start)
+    
+    return pd.DataFrame(p5s), pd.DataFrame(columns = ["MIhra5"], data = MIhra5)
+
+#%%
+### Concatanation of all the indicators:
+def summaryindicators(p1s: pd.pandas.core.frame.DataFrame, p2s: pd.pandas.core.frame.DataFrame, p3s: pd.pandas.core.frame.DataFrame, p4s: pd.pandas.core.frame.DataFrame, p5s: pd.pandas.core.frame.DataFrame):
+    """
+    Inputs
+    ------------------
+    p1s, p2s, p3s, p4s, p5s: pandas.DataFrame 5x[x x n] where each row represents a different individual indexes.
+            
+    Returns
+    --------------------
+    ps: pandas.DataFrame [22 x n] where each row represents a different individual indexes.
+        
+    MIhra: pandas.DataFrame [n x 5] where the unique row represents the global group index.
+    """
+        
+    ps = pd.DataFrame(columns = p1s.columns, index =["p11","p12", "p13", "p14", "p15","p16","p17", "p18", "p19", "p110","p111","p112",
+                                                     "p213", "p214", "p215","p216","p317", "p318", "p419", "p420","p521", "p522"], 
+                      data = pd.concat([p1s, p2s, p3s, p4s, p5s], axis = 0).values )
+        
+    MIhra1 = pd.DataFrame(columns = ["MI-HRA1"], data = p1s.mean()) 
+    MIhra2 = pd.DataFrame(columns = ["MI-HRA2"], data = p2s.mean())
+    MIhra3 = pd.DataFrame(columns = ["MI-HRA3"], data = p3s.mean())
+    MIhra4 = pd.DataFrame(columns = ["MI-HRA4"], data = p4s.mean())
+    MIhra5 = pd.DataFrame(columns = ["MI-HRA5"], data = p5s.mean())
+        
+    MIhra = pd.DataFrame(index = p1s.columns, columns =["MI-HRA1","MI-HRA2", "MI-HRA3", "MI-HRA4", "MI-HRA5"])
+        
+    MIhra["MI-HRA1"] = MIhra1["MI-HRA1"]
+    MIhra["MI-HRA2"] = MIhra2["MI-HRA2"]
+    MIhra["MI-HRA3"] = MIhra3["MI-HRA3"]
+    MIhra["MI-HRA4"] = MIhra4["MI-HRA4"]
+    MIhra["MI-HRA5"] = MIhra5["MI-HRA5"]
+            
+        
+    return ps, MIhra
+
+#%%
+### Computation of the Global index (GMI-HRA):
+
+def globalmonthlyindex(MIhra: pd.pandas.core.frame.DataFrame):
+    """
+    Inputs
+    ------------------
+    MIhra: dataset[n x 5]: 
+        dataframe with each group index MI-HRA per grid (gauges)
+            
+    Returns
+    --------------------
+    GMIs: pandas.DataFrame [n x 1] where the unique row represents the global group index per grid (gauges).
+    """
+    
+    # The number of stations (grids) is computed:
+    numstationsused = MIhra.shape[0]
+    
+    #Weights (wis) of each index. They represent the number of indicatores per group:
+    wistable = [12,4,2,2,2]
+
+    # Now we proceed with a matrix multiplication:
+    wisarraey = np.array(wistable)
+    mihrasarray = np.array(MIhra.values)
+    # Finally one DataFrame with the Global indexes is computed:
+    GMIs = pd.DataFrame(index = range(numstationsused), columns = ["GMI-HRA"], data = (np.dot(mihrasarray,np.transpose(wisarraey)))/(22))
+    return GMIs
+
+#%% 
+### Computation of the Mann-Kendal and Sen's trend tests
